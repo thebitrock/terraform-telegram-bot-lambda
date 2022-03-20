@@ -44,7 +44,7 @@ resource "null_resource" "set_webhook" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:-----:|
 | identifier | Bot identifier | `string` | n/a | yes |
-| source\_dir | Dir with js code | `string` | n/a | yes |
+| source\_dir | Path to folder with js code | `string` | n/a | yes |
 | bot\_token | Bot token from @BotFather | `string` | n/a | yes |
 | hook\_path | Hook path to endpoint | `string` | `bot` | no |
 
