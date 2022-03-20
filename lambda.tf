@@ -1,5 +1,5 @@
 resource "aws_iam_role" "lambda" {
-  name = "iam_for_lambda"
+  name = format("iam_for_lambda_%s", var.identifier)
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -16,19 +16,19 @@ resource "aws_iam_role" "lambda" {
   })
 }
 
-resource "aws_lambda_function" "telegram_bot" {
+resource "aws_lambda_function" "sltb" {
   s3_bucket        = aws_s3_bucket.source_code.bucket
   s3_key           = aws_s3_object.source_code.key
-  function_name    = "telegram_bot"
+  function_name    = "sltb"
   role             = aws_iam_role.lambda.arn
   handler          = "index.handler"
   runtime          = "nodejs14.x"
-  source_code_hash = data.archive_file.source_code.output_md5
+  source_code_hash = data.archive_file.source_code.output_base64sha256
 
   environment {
     variables = {
       BOT_TOKEN     = var.bot_token
-      BOT_HOOK_PATH = "/${var.hook_path}"
+      BOT_HOOK_PATH = format("/%s", var.hook_path)
     }
   }
 
@@ -38,12 +38,12 @@ resource "aws_lambda_function" "telegram_bot" {
 }
 
 resource "aws_cloudwatch_log_group" "lambda" {
-  name              = "/aws/lambda/${local.identifier_name}"
+  name              = format("/aws/lambda/%s", local.identifier_name)
   retention_in_days = 1
 }
 
 resource "aws_iam_policy" "lambda_logging" {
-  name        = "lambda_logging"
+  name        = format("lambda_logging_for_%s", var.identifier)
   path        = "/"
   description = "IAM policy for logging from a lambda"
 
