@@ -1,4 +1,4 @@
-# Terraform AWS ECS cron module
+# Terraform AWS Lambda Telegram Bot (Telegraf)
 ## How to use
 ```tf
 provider "null" {}
