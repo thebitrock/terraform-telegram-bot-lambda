@@ -27,7 +27,6 @@ resource "aws_api_gateway_integration" "lambda" {
 
 resource "aws_api_gateway_deployment" "lambda" {
   rest_api_id = aws_api_gateway_rest_api.api_sltb.id
-  stage_name  = "v1"
 
   triggers = {
     redeployment = sha1(jsonencode([
@@ -42,6 +41,33 @@ resource "aws_api_gateway_deployment" "lambda" {
   }
 }
 
+resource "aws_api_gateway_stage" "api_gateway" {
+  deployment_id = aws_api_gateway_deployment.lambda.id
+  rest_api_id   = aws_api_gateway_rest_api.api_sltb.id
+  stage_name    = local.stage_name
+
+  depends_on = [
+    aws_cloudwatch_log_group.api_gateway,
+    aws_iam_role.api_gateway
+  ]
+}
+
+resource "aws_api_gateway_method_settings" "api_gateway" {
+  rest_api_id = aws_api_gateway_rest_api.api_sltb.id
+  stage_name  = aws_api_gateway_stage.api_gateway.stage_name
+  method_path = "*/*"
+
+  settings {
+    metrics_enabled = true
+    logging_level   = "INFO"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "api_gateway" {
+  name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.api_sltb.id}/${local.stage_name}"
+  retention_in_days = 1
+}
+
 resource "aws_lambda_permission" "api_sltb" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
@@ -49,4 +75,50 @@ resource "aws_lambda_permission" "api_sltb" {
   principal     = "apigateway.amazonaws.com"
 
   source_arn = "${aws_api_gateway_rest_api.api_sltb.execution_arn}/*/*"
+}
+
+resource "aws_api_gateway_account" "api_gateway" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway.arn
+}
+
+resource "aws_iam_role" "api_gateway" {
+  name = format("iam_for_api_gateway_%s", var.identifier)
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+        Effect = "Allow"
+        Sid    = ""
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "api_gateway_logging" {
+  name = format("api_gateway_logging_for_%s", var.identifier)
+  role = aws_iam_role.api_gateway.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:PutLogEvents",
+          "logs:GetLogEvents",
+          "logs:FilterLogEvents"
+        ]
+        Effect   = "Allow"
+        Resource = "arn:aws:logs:*:*:*"
+      },
+    ]
+  })
 }

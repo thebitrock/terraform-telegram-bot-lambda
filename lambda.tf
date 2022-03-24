@@ -33,6 +33,7 @@ resource "aws_lambda_function" "sltb" {
   }
 
   depends_on = [
+    aws_iam_role_policy_attachment.lambda_logs,
     aws_cloudwatch_log_group.lambda
   ]
 }
@@ -40,6 +41,11 @@ resource "aws_lambda_function" "sltb" {
 resource "aws_cloudwatch_log_group" "lambda" {
   name              = format("/aws/lambda/%s", local.identifier_name)
   retention_in_days = 1
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
 }
 
 resource "aws_iam_policy" "lambda_logging" {
@@ -61,9 +67,4 @@ resource "aws_iam_policy" "lambda_logging" {
       },
     ]
   })
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_logs" {
-  role       = aws_iam_role.lambda.name
-  policy_arn = aws_iam_policy.lambda_logging.arn
 }
