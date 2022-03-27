@@ -33,22 +33,30 @@ resource "aws_api_gateway_deployment" "lambda" {
       aws_api_gateway_resource.proxy.id,
       aws_api_gateway_method.proxy.id,
       aws_api_gateway_integration.lambda.id,
+      aws_lambda_permission.api_sltb
     ]))
   }
 
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [
+    aws_api_gateway_method.proxy,
+    aws_api_gateway_resource.proxy,
+    aws_api_gateway_integration.lambda
+  ]
 }
 
 resource "aws_api_gateway_stage" "api_gateway" {
   deployment_id = aws_api_gateway_deployment.lambda.id
   rest_api_id   = aws_api_gateway_rest_api.api_sltb.id
-  stage_name    = local.stage_name
+  stage_name    = var.identifier
 
   depends_on = [
-    aws_cloudwatch_log_group.api_gateway,
-    aws_iam_role.api_gateway
+    aws_lambda_permission.api_sltb,
+    aws_iam_role.api_gateway,
+    aws_api_gateway_deployment.lambda
   ]
 }
 
@@ -63,18 +71,16 @@ resource "aws_api_gateway_method_settings" "api_gateway" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "api_gateway" {
-  name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.api_sltb.id}/${local.stage_name}"
-  retention_in_days = 1
-}
-
 resource "aws_lambda_permission" "api_sltb" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.sltb.function_name
   principal     = "apigateway.amazonaws.com"
 
-  source_arn = "${aws_api_gateway_rest_api.api_sltb.execution_arn}/*/*"
+  source_arn = "${aws_api_gateway_rest_api.api_sltb.execution_arn}/*/*/*"
+  depends_on = [
+    aws_api_gateway_rest_api.api_sltb
+  ]
 }
 
 resource "aws_api_gateway_account" "api_gateway" {

@@ -19,7 +19,7 @@ resource "aws_iam_role" "lambda" {
 resource "aws_lambda_function" "sltb" {
   s3_bucket        = aws_s3_bucket.source_code.bucket
   s3_key           = aws_s3_object.source_code.key
-  function_name    = "sltb"
+  function_name    = local.identifier_name
   role             = aws_iam_role.lambda.arn
   handler          = "index.handler"
   runtime          = "nodejs14.x"
@@ -34,13 +34,7 @@ resource "aws_lambda_function" "sltb" {
 
   depends_on = [
     aws_iam_role_policy_attachment.lambda_logs,
-    aws_cloudwatch_log_group.lambda
   ]
-}
-
-resource "aws_cloudwatch_log_group" "lambda" {
-  name              = format("/aws/lambda/%s", local.identifier_name)
-  retention_in_days = 1
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_logs" {

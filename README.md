@@ -81,3 +81,4 @@ Use it to create new bot accounts and manage your existing bots.
 | Name | Description |
 |------|-------------|
 | webhook\_url | Created API Gateway endpoint url |
+| lambda\_role\_name | Created Lambda role name |
