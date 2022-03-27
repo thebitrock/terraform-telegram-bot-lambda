@@ -17,3 +17,8 @@ variable "hook_path" {
   type    = string
   default = "bot"
 }
+
+variable "environment_variables" {
+  type    = map(any)
+  default = {}
+}

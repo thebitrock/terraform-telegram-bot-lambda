@@ -26,10 +26,10 @@ resource "aws_lambda_function" "sltb" {
   source_code_hash = data.archive_file.source_code.output_base64sha256
 
   environment {
-    variables = {
+    variables = merge({
       BOT_TOKEN     = var.bot_token
       BOT_HOOK_PATH = format("/%s", var.hook_path)
-    }
+    }, var.environment_variables)
   }
 
   depends_on = [
@@ -43,7 +43,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 }
 
 resource "aws_iam_policy" "lambda_logging" {
-  name        = format("lambda_logging_for_%s", var.identifier)
+  name        = format("lambda_logging_for_%s", local.identifier_name)
   path        = "/"
   description = "IAM policy for logging from a lambda"
 
