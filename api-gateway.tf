@@ -1,5 +1,5 @@
 resource "aws_api_gateway_rest_api" "api_sltb" {
-  name = lower(local.identifier_name)
+  name = var.identifier
 }
 
 resource "aws_api_gateway_resource" "proxy" {

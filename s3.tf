@@ -1,9 +1,9 @@
 resource "aws_s3_bucket" "source_code" {
-  bucket = lower(local.identifier_name)
+  bucket = var.identifier
 }
 
 resource "aws_s3_object" "source_code" {
-  key    = "${local.identifier_name}.zip"
+  key    = "${var.identifier}.zip"
   bucket = aws_s3_bucket.source_code.id
 
   source = data.archive_file.source_code.output_path

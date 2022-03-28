@@ -19,7 +19,7 @@ resource "aws_iam_role" "lambda" {
 resource "aws_lambda_function" "sltb" {
   s3_bucket        = aws_s3_bucket.source_code.bucket
   s3_key           = aws_s3_object.source_code.key
-  function_name    = local.identifier_name
+  function_name    = var.identifier
   role             = aws_iam_role.lambda.arn
   handler          = "index.handler"
   runtime          = "nodejs14.x"
@@ -43,7 +43,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 }
 
 resource "aws_iam_policy" "lambda_logging" {
-  name        = format("lambda_logging_for_%s", local.identifier_name)
+  name        = format("lambda_logging_for_%s", var.identifier)
   path        = "/"
   description = "IAM policy for logging from a lambda"
 
